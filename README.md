@@ -52,6 +52,36 @@ if __name__ == "__main__":
 
 ```
 
+## Quick Start
+
+### 1. Clone the project to your local machine t
+```bash
+git clone https://gitlab.lrz.de/00000000014B2F54/mujoco-panda-rl.git
+cd panda_mujoco_gym
+```
+
+### 2. Create and activate a conda environment (recommended)
+```bash
+conda create -n panda-rl python=3.10 -y
+conda activate panda-rl
+```
+
+### 3. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. (Recommended) Install the local package in development mode
+```bash
+pip install -e .
+```
+
+### 5. Run tests
+```bash
+pytest test/
+```
+All tests should pass, indicating that your environment and dependencies are correctly set up.
+
 ## Citation
 
 If you use this repo in your work, please cite:

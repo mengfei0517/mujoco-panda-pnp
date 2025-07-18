@@ -3,7 +3,7 @@ from gymnasium.envs.registration import register
 
 ENV_IDS = []
 
-for task in ["Slide", "Push", "PickAndPlace"]:
+for task in ["Slide", "Push", "PickAndPlace", "ShelfPNP"]:
     for reward_type in ["sparse", "dense"]:
         reward_suffix = "Dense" if reward_type == "dense" else "Sparse"
         env_id = f"Franka{task}{reward_suffix}-v0"

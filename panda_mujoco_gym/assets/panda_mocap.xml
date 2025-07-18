@@ -115,14 +115,17 @@
     <worldbody>
         <light name="top" pos="0 0 2" mode="trackcom"/>
 
-        <body mocap="true" name="panda_mocap" pos="0.6 0 0.4">
+        <!-- panda_mocap is used for mocap tracking -->
+        <body mocap="true" name="panda_mocap" pos="0.6 0 0.3">
             <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.7" size="0.005 0.005 0.005" type="box"></geom>
             <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.1" size="0.5 0.005 0.005" type="box"></geom>
             <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.1" size="0.005 0.5 0.001" type="box"></geom>
             <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.1" size="0.005 0.005 0.5" type="box"></geom>
         </body>
 
-      <body name="link0" childclass="panda">
+      <!-- Panda base fixed on the table top center -->
+      <body name="link0" childclass="panda" pos="0.6 0 0.3">
+      
         <inertial mass="0.629769" pos="-0.041018 -0.00014 0.049974" fullinertia="0.00315 0.00388 0.004285 8.2904e-7 0.00015 8.2299e-6"/>
         <geom mesh="link0_0" material="off_white" class="visual"/>
         <geom mesh="link0_1" material="black" class="visual"/>

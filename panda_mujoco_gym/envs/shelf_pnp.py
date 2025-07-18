@@ -1,10 +1,10 @@
 import os
 from panda_mujoco_gym.envs.panda_env import FrankaEnv
 
-MODEL_XML_PATH = os.path.join(os.path.dirname(__file__), "../assets/", "pick_and_place.xml")
+MODEL_XML_PATH = os.path.join(os.path.dirname(__file__), "../assets/", "shelf_pnp.xml")
 
 
-class FrankaPickAndPlaceEnv(FrankaEnv):
+class FrankaShelfPNPEnv(FrankaEnv):
     def __init__(
         self,
         reward_type,
@@ -16,9 +16,7 @@ class FrankaPickAndPlaceEnv(FrankaEnv):
             reward_type=reward_type,
             block_gripper=False,
             distance_threshold=0.05,
-            goal_xy_range=0.3,
-            obj_xy_range=0.3,
-            goal_x_offset=0.0,
-            goal_z_range=0.2,
+            obj_x_range=0.05,
+            obj_y_range=0.2,
             **kwargs,
         )
