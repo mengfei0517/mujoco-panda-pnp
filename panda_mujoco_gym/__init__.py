@@ -3,7 +3,7 @@ from gymnasium.envs.registration import register
 
 ENV_IDS = []
 
-for task in ["Slide", "Push", "PickAndPlace", "ShelfPNP"]:
+for task in ["ShelfPNP"]:
     for reward_type in ["sparse", "dense"]:
         reward_suffix = "Dense" if reward_type == "dense" else "Sparse"
         env_id = f"Franka{task}{reward_suffix}-v0"
@@ -12,7 +12,9 @@ for task in ["Slide", "Push", "PickAndPlace", "ShelfPNP"]:
             id=env_id,
             entry_point=f"panda_mujoco_gym.envs:Franka{task}Env",
             kwargs={"reward_type": reward_type},
-            max_episode_steps=50,
+            max_episode_steps=300,
         )
 
         ENV_IDS.append(env_id)
+
+

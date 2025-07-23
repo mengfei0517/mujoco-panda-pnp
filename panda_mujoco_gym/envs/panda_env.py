@@ -1,4 +1,4 @@
-import mujoco
+import mujoco  # type: ignore
 import numpy as np
 from gymnasium.core import ObsType
 from gymnasium_robotics.envs.robot_env import MujocoRobotEnv
@@ -24,7 +24,7 @@ class FrankaEnv(MujocoRobotEnv):
 
     def __init__(
         self,
-        model_path: str = None,
+        model_path: Optional[str] = None,
         n_substeps: int = 50,
         reward_type: str = "sparse",
         block_gripper: bool = False,
@@ -34,7 +34,8 @@ class FrankaEnv(MujocoRobotEnv):
         **kwargs,
     ):
         # multi-object version variables initialization
-        self.task_sequence = ["sphere", "cube", "cylinder"]
+        self.task_sequence = ["sphere", "cylinder"]
+        # self.task_sequence = ["sphere"]
         self.current_task_index = 0
         self.current_target_object = self.task_sequence[0]
         self.goal = None
@@ -43,7 +44,7 @@ class FrankaEnv(MujocoRobotEnv):
         self.block_gripper = block_gripper
         self.model_path = model_path
 
-        action_size = 3
+        action_size = 6 # 3 for position, 3 for orientation
         action_size += 0 if self.block_gripper else 1
 
         self.reward_type = reward_type
@@ -76,11 +77,21 @@ class FrankaEnv(MujocoRobotEnv):
         # control range
         self.ctrl_range = self.model.actuator_ctrlrange
 
+        # Multi-object task initialization
+        self._initialize_multi_object_task()
+
         # override the methods in MujocoRobotEnv
-    # -----------------------------
+        # -----------------------------
+
+    def _initialize_multi_object_task(self):
+        self.current_task_index = 0
+        self.current_target_object = self.task_sequence[0]
+        self.goal = self._sample_goal()
+
+
     def _initialize_simulation(self) -> None:
-        self.model = self._mujoco.MjModel.from_xml_path(self.fullpath)
-        self.data = self._mujoco.MjData(self.model)
+        self.model = self._mujoco.MjModel.from_xml_path(self.fullpath)  # type: ignore
+        self.data = self._mujoco.MjData(self.model)  # type: ignore
         self._model_names = self._utils.MujocoModelNames(self.model)
 
         self.model.vis.global_.offwidth = self.width
@@ -100,7 +111,7 @@ class FrankaEnv(MujocoRobotEnv):
         self.data.ctrl[0:7] = neutral_joint_values[0:7]
         self.reset_mocap_welds(self.model, self.data)
 
-        self._mujoco.mj_forward(self.model, self.data)
+        self._mujoco.mj_forward(self.model, self.data)  # type: ignore
 
         self.initial_mocap_position = self._utils.get_site_xpos(self.model, self.data, "ee_center_site").copy()
         self.grasp_site_pose = self.get_ee_orientation().copy()
@@ -111,11 +122,11 @@ class FrankaEnv(MujocoRobotEnv):
 
         self.initial_object_height = self._utils.get_joint_qpos(self.model, self.data, "obj_joint")[2].copy()
 
-    def step(self, action) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
+    def step(self, action) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:  # type: ignore
         if np.array(action).shape != self.action_space.shape:
             raise ValueError("Action dimension mismatch")
 
-        action = np.clip(action, self.action_space.low, self.action_space.high)
+        action = np.clip(action, self.action_space.low, self.action_space.high)  # type: ignore
         self._set_action(action)
 
         self._mujoco_step(action)
@@ -126,6 +137,8 @@ class FrankaEnv(MujocoRobotEnv):
             self.render()
 
         obs = self._get_obs().copy()
+        if self.goal is not None:
+            assert np.allclose(obs["desired_goal"], self.goal), "Mismatch between obs and internal goal"
 
         info = {"is_success": self._is_success(obs["achieved_goal"], obs["desired_goal"])}
 
@@ -142,102 +155,101 @@ class FrankaEnv(MujocoRobotEnv):
                 terminated = True  # all tasks completed
 
         truncated = self.compute_truncated(obs["achieved_goal"], self.goal, info)
-        return obs, reward, terminated, truncated, info
+        return obs, reward, terminated, truncated, info  # type: ignore
 
-    def compute_reward(self, achieved_goal, desired_goal, info) -> SupportsFloat:
-        dist = self.goal_distance(achieved_goal, desired_goal)
+    def compute_reward(self, achieved_goal, desired_goal, info):
+        """
+        compute the reward for the multi-object task
+        """
+        achieved_goal = np.array(achieved_goal)
+        desired_goal = np.array(desired_goal)
+        d = self.goal_distance(achieved_goal, desired_goal)
+        task_progress = self.current_task_index / len(self.task_sequence)
+
         if self.reward_type == "sparse":
-            return 1.0 if dist < self.distance_threshold else 0.0
+            # 稀疏奖励：只有达到目标时才给奖励
+            reward = -(d < self.distance_threshold).astype(np.float32)
         else:
-            return -dist
+            # 稠密奖励：结合距离奖励和任务进度奖励
+            reward = -d + 0.5 * task_progress
+
+        return reward
 
     def _set_action(self, action) -> None:
         action = action.copy()
-        # for the pick and place task
         if not self.block_gripper:
-            pos_ctrl, gripper_ctrl = action[:3], action[3]
+            pos_ctrl, rot_ctrl, gripper_ctrl = action[:3], action[3:6], action[6]
             fingers_ctrl = gripper_ctrl * 0.2
             fingers_width = self.get_fingers_width().copy() + fingers_ctrl
             fingers_half_width = np.clip(fingers_width / 2, self.ctrl_range[-1, 0], self.ctrl_range[-1, 1])
-
-        elif self.block_gripper:
-            pos_ctrl = action
+        else:
+            pos_ctrl, rot_ctrl = action[:3], action[3:6]
             fingers_half_width = 0
 
-        # control the gripper
+        # control gripper 
         self.data.ctrl[-2:] = fingers_half_width
 
-        # control the end-effector with mocap body
+        # control EE position
         pos_ctrl *= 0.05
         pos_ctrl += self.get_ee_position().copy()
         pos_ctrl[2] = np.max((0, pos_ctrl[2]))
 
-        self.set_mocap_pose(pos_ctrl, self.grasp_site_pose)
+        # control EE orientation: euler → quaternion
+        current_quat = self.get_ee_orientation().copy()
+        delta_euler = np.clip(rot_ctrl, -1.0, 1.0) * 0.1  # reduce rotation step
+        delta_quat = rotations.euler2quat(delta_euler)
+        target_quat = rotations.quat_mul(delta_quat, current_quat)
+
+        self.set_mocap_pose(pos_ctrl, target_quat)
+
 
     def _get_obs(self) -> dict:
-        # if the attribute does not exist, set a default value
-        if not hasattr(self, "current_target_object"):
-            self.current_target_object = "sphere"  # or other default value
-        # current target object name
         current_obj = self.current_target_object
-        current_site = f"{current_obj}_site"
+        goal = self.goal.copy() if self.goal is not None else None
 
-        # end-effector state
+        # End-effector state
         ee_position = self._utils.get_site_xpos(self.model, self.data, "ee_center_site").copy()
         ee_velocity = self._utils.get_site_xvelp(self.model, self.data, "ee_center_site").copy() * self.dt
 
-        if not self.block_gripper:
-            fingers_width = self.get_fingers_width().copy()
-
-        # current object state
+        # Object state (only for current target object)
+        current_site = f"{current_obj}_site"
         object_position = self._utils.get_site_xpos(self.model, self.data, current_site).copy()
         object_rotation = rotations.mat2euler(self._utils.get_site_xmat(self.model, self.data, current_site)).copy()
         object_velp = self._utils.get_site_xvelp(self.model, self.data, current_site).copy() * self.dt
         object_velr = self._utils.get_site_xvelr(self.model, self.data, current_site).copy() * self.dt
 
-        # current target point
-        desired_goal = self._utils.get_site_xpos(self.model, self.data, f"target_{current_obj}").copy()
-
+        # Combine into observation
         if not self.block_gripper:
-            obs = {
-                "observation": np.concatenate([
-                    ee_position,
-                    ee_velocity,
-                    fingers_width,
-                    object_position,
-                    object_rotation,
-                    object_velp,
-                    object_velr,
-                ]).copy(),
-                "achieved_goal": object_position.copy(),
-                "desired_goal": desired_goal.copy(),
-            }
+            fingers_width = self.get_fingers_width().copy()
+            observation = np.concatenate([
+                ee_position,
+                ee_velocity,
+                fingers_width,
+                object_position,
+                object_rotation,
+                object_velp,
+                object_velr,
+            ])
         else:
-            obs = {
-                "observation": np.concatenate([
-                    ee_position,
-                    ee_velocity,
-                    object_position,
-                    object_rotation,
-                    object_velp,
-                    object_velr,
-                ]).copy(),
-                "achieved_goal": object_position.copy(),
-                "desired_goal": desired_goal.copy(),
-            }
+            observation = np.concatenate([
+                ee_position,
+                ee_velocity,
+                object_position,
+                object_rotation,
+                object_velp,
+                object_velr,
+            ])
 
-        return obs
+        return {
+            "observation": observation,
+            "achieved_goal": object_position.copy(),
+            "desired_goal": goal,  # use self.goal, ensure consistency with step()
+        }
 
     def _is_success(self, achieved_goal, desired_goal) -> np.float32:
-        d = self.goal_distance(achieved_goal, desired_goal)
-        return (d < self.distance_threshold).astype(np.float32)
+        d = float(self.goal_distance(achieved_goal, desired_goal))
+        return np.float32(1.0 if d < self.distance_threshold else 0.0)
 
-    # def _render_callback(self) -> None:
-    #     # visualize goal site for multi-object version
-    #     sites_offset = (self.data.site_xpos - self.model.site_pos).copy()
-    #     site_id = self._model_names.site_name2id["target"]
-    #     self.model.site_pos[site_id] = self.goal - sites_offset[site_id]
-    #     self._mujoco.mj_forward(self.model, self.data)
 
     def _reset_sim(self) -> bool:
         # 1. reset the simulation state
@@ -259,24 +271,27 @@ class FrankaEnv(MujocoRobotEnv):
             self.model, self.data, f"target_{self.current_target_object}"
         ).copy()
 
-        self._mujoco.mj_forward(self.model, self.data)
+        self._mujoco.mj_forward(self.model, self.data)  # type: ignore
         return True
 
     def _mujoco_step(self, action: Optional[np.ndarray] = None) -> None:
         for _ in range(10):
-            self._mujoco.mj_step(self.model, self.data, nstep=self.n_substeps)
+            self._mujoco.mj_step(self.model, self.data, nstep=self.n_substeps)  # type: ignore
 
     # custom methods
     # -----------------------------
     def reset_mocap_welds(self, model, data) -> None:
         if model.nmocap > 0 and model.eq_data is not None:
             for i in range(model.eq_data.shape[0]):
-                if model.eq_type[i] == mujoco.mjtEq.mjEQ_WELD:
+                if model.eq_type[i] == mujoco.mjtEq.mjEQ_WELD:  # type: ignore
                     # relative pose
                     model.eq_data[i, 3:10] = np.array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0])
-        self._mujoco.mj_forward(model, data)
+        self._mujoco.mj_forward(model, data)  # type: ignore
 
-    def goal_distance(self, goal_a, goal_b) -> SupportsFloat:
+    def goal_distance(self, goal_a, goal_b):
+        # 支持批量和单个输入
+        goal_a = np.array(goal_a)
+        goal_b = np.array(goal_b)
         assert goal_a.shape == goal_b.shape
         return np.linalg.norm(goal_a - goal_b, axis=-1)
 
@@ -299,28 +314,16 @@ class FrankaEnv(MujocoRobotEnv):
             self.model, self.data, f"target_{self.current_target_object}"
         ).copy()
 
-    def _sample_object(self) -> None:
-        """
-        Sample each object's position within a rectangle defined by:
-        - x in [x0 - dx, x0 + dx]
-        - y in [y0 - dy, y0 + dy]
-        where (x0, y0, z0) is from XML (via get_joint_qpos)
-        """
-        joint_names = ["sphere_joint", "cube_joint", "cylinder_joint"]
-        for joint_name in joint_names:
-            base_qpos = self._utils.get_joint_qpos(self.model, self.data, joint_name).copy()
-            base_pos = base_qpos[:3]
-            quat = base_qpos[3:]
-            # sample xy, keep z unchanged
-            base_pos[0] += self.np_random.uniform(-self.obj_x_range, self.obj_x_range)
-            base_pos[1] += self.np_random.uniform(-self.obj_y_range, self.obj_y_range)
-            new_qpos = np.concatenate([base_pos, quat])
-            self._utils.set_joint_qpos(self.model, self.data, joint_name, new_qpos)
+    def _sample_object(self):
+        # not sample object, just return the current object position
+        return self._utils.get_site_xpos(
+            self.model, self.data, f"{self.current_target_object}_site"
+        ).copy()
 
     def get_ee_orientation(self) -> np.ndarray:
         site_mat = self._utils.get_site_xmat(self.model, self.data, "ee_center_site").reshape(9, 1)
         current_quat = np.empty(4)
-        self._mujoco.mju_mat2Quat(current_quat, site_mat)
+        self._mujoco.mju_mat2Quat(current_quat, site_mat)  # type: ignore
         return current_quat
 
     def get_ee_position(self) -> np.ndarray:

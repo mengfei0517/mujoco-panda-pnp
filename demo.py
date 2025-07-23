@@ -4,9 +4,11 @@ import panda_mujoco_gym
 
 if __name__ == "__main__":
 
-    env = gym.make("FrankaShelfPNPSparse-v0", render_mode="human")
+    # env = gym.make("FrankaShelfPNPSparse-v0", render_mode="human")
+    env = gym.make("FrankaShelfPNPDense-v0", render_mode="human")
 
     observation, info = env.reset()
+    print("ee初始位置坐标：", env.unwrapped.get_ee_position())
 
     for _ in range(1000):
         action = env.action_space.sample()

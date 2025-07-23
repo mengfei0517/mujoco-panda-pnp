@@ -31,16 +31,16 @@
       <!-- table -->
       <body name="table" pos="0.7 0 0">
         <!-- 4 legs，z=0.2，xy is 0.27 and 0.47 -->
-        <geom name="table_leg1" type="box" size="0.03 0.03 0.15" pos="0.27 0.27 0.15" rgba="0.5 0.3 0.2 1"/>
-        <geom name="table_leg2" type="box" size="0.03 0.03 0.15" pos="-0.27 0.27 0.15" rgba="0.5 0.3 0.2 1"/>
-        <geom name="table_leg3" type="box" size="0.03 0.03 0.15" pos="0.27 -0.27 0.15" rgba="0.5 0.3 0.2 1"/>
-        <geom name="table_leg4" type="box" size="0.03 0.03 0.15" pos="-0.27 -0.27 0.15" rgba="0.5 0.3 0.2 1"/>
+        <geom name="table_leg1" type="box" size="0.03 0.03 0.15" pos="0.37 0.37 0.15" rgba="0.5 0.3 0.2 1"/>
+        <geom name="table_leg2" type="box" size="0.03 0.03 0.15" pos="-0.37 0.37 0.15" rgba="0.5 0.3 0.2 1"/>
+        <geom name="table_leg3" type="box" size="0.03 0.03 0.15" pos="0.37 -0.37 0.15" rgba="0.5 0.3 0.2 1"/>
+        <geom name="table_leg4" type="box" size="0.03 0.03 0.15" pos="-0.37 -0.37 0.15" rgba="0.5 0.3 0.2 1"/>
         <!-- table top，z=0.4+0.02=0.42 -->
-        <geom name="table_top" type="box" size="0.3 0.3 0.02" pos="0 0 0.28" rgba="0.8 0.6 0.4 1"/>
+        <geom name="table_top" type="box" size="0.4 0.4 0.02" pos="0 0 0.28" rgba="0.8 0.6 0.4 1"/>
       </body>
 
       <!-- shelf on the ground -->
-      <body name="shelf" pos="1.4 0 0">
+      <body name="shelf" pos="1.5 0 0">
         <!-- shelf legs -->
         <geom name="shelf_leg1" type="box" size="0.02 0.02 0.505" pos="0.13 0.48 0.505" rgba="0.5 0.5 0.5 1"/>
         <geom name="shelf_leg2" type="box" size="0.02 0.02 0.505" pos="-0.13 0.48 0.505" rgba="0.5 0.5 0.5 1"/>
@@ -53,23 +53,23 @@
       </body>
 
       <!-- three target sites -->
-      <site name="target_sphere" pos="0.85 -0.1 0.3" size="0.02 0.02 0.02" rgba="1 0 0 1" type="sphere"/>
-      <site name="target_cube" pos="0.85 0 0.3" size="0.02 0.02 0.02" rgba="0 0 1 1" type="sphere"/>
-      <site name="target_cylinder" pos="0.85 0.1 0.3" size="0.02 0.02 0.02" rgba="0 1 0 1" type="sphere"/>
+      <site name="target_sphere" pos="1.0 -0.1 0.3" size="0.02 0.02 0.02" rgba="1 0 0 1" type="sphere"/>
+      <site name="target_cube" pos="1.0 0 0.3" size="0.02 0.02 0.02" rgba="0 0 1 1" type="sphere"/>
+      <site name="target_cylinder" pos="1.0 0.1 0.3" size="0.02 0.02 0.02" rgba="0 1 0 1" type="sphere"/>
 
-      <!-- sphere on the top shelf, left side -->
-      <body name="sphere" pos="1.4 0.0 1.03">
+      <!-- sphere on the middle shelf, middle side -->
+      <body name="sphere" pos="1.4 0.0 0.73">
         <joint type="free" name="sphere_joint"/>
         <geom name="sphere_geom" type="sphere" size="0.02" rgba="0.8 0.2 0.2 1"/>
         <site name="sphere_site" pos="0 0 0" size="0.01" type="sphere"/>
       </body>
-      <!-- cube on the middle shelf, right side -->
-      <body name="cube" pos="1.4 0.0 0.73">
+      <!-- cube on the top shelf, middle side -->
+      <body name="cube" pos="1.4 0.0 1.03">
         <joint type="free" name="cube_joint"/>
         <geom name="cube_geom" type="box" size="0.02 0.02 0.02" rgba="0.2 0.6 0.8 1"/>
         <site name="cube_site" pos="0 0 0" size="0.01" type="sphere"/>
       </body>
-      <!-- cylinder on the bottom shelf, center -->
+      <!-- cylinder on the bottom shelf, middle side -->
       <body name="cylinder" pos="1.4 0.0 0.43">
         <joint type="free" name="cylinder_joint"/>
         <geom name="cylinder_geom" type="cylinder" size="0.02 0.02" rgba="0.2 0.8 0.2 1"/>
@@ -83,6 +83,6 @@
       </body>
   
     </worldbody>
-    
+
   </mujoco>
   
