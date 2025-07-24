@@ -7,9 +7,8 @@ from .base import Skill
 class MoveSkill(Skill):
     """Move EE from current to target position in a straight line (fixed orientation)."""
 
-    def __init__(self, env, target_pos: np.ndarray, steps: int = 20, pos_thresh: float = 0.03):
+    def __init__(self, env, target_pos: np.ndarray, steps: int = 30, pos_thresh: float = 0.02):
         super().__init__(env)
-        assert steps >= 1, "steps must be >=1"
         assert pos_thresh > 0, "pos_thresh must be positive"
 
         self.target_pos = np.asarray(target_pos, float)
@@ -25,6 +24,15 @@ class MoveSkill(Skill):
         self.done = False
         self.start_pos = self.env.get_ee_position().copy()
         self.quat = self.env.get_ee_orientation().copy()
+        # 动态调整插值步数
+        dist = np.linalg.norm(self.start_pos - self.target_pos)
+        if dist > 1.0:
+            steps = 120
+        elif dist > 0.5:
+            steps = 60
+        else:
+            steps = 20
+        self.steps = steps
         self.pos_traj = np.linspace(self.start_pos, self.target_pos, self.steps)
 
     def step(self):

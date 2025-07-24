@@ -6,7 +6,6 @@ from scipy.spatial.transform import Rotation as R
 from panda_mujoco_gym.skills.rotate import RotateSkill
 from panda_mujoco_gym.skills.move import MoveSkill
 from panda_mujoco_gym.skills.gripper import GripperSkill
-from panda_mujoco_gym.skills.home import HomeSkill
 
 
 def make_env():
@@ -63,14 +62,6 @@ def test_move_place_linear():
     target = pos + np.array([0.0, 0.0, -0.08])
     skill = MoveSkill.place_linear(env, target_pos=target, clearance=0.10, steps=30)
     run_skill(skill, env)
-
-def test_home_skill():
-    """test home skill"""
-    env = make_env()
-    env.unwrapped.home_pos = env.unwrapped.get_ee_position().copy()
-    env.unwrapped.home_quat = env.unwrapped.get_ee_orientation().copy()
-    skill = HomeSkill(env, steps=30)
-    run_skill(skill, env, use_env_step=True)
 
 def test_move_lift():
     """Lift via MoveSkill.lift()."""

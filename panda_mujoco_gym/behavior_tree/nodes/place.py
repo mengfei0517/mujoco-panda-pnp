@@ -59,7 +59,6 @@ class PlaceNode(py_trees.behaviour.Behaviour):
         elif phase == 1:
             return MoveSkill(self.env, self.meta["home_wpt"])
         elif phase == 2:
-            print("[DEBUG] Constructing RotateSkill...")
             return RotateSkill(self.env, self.meta["rotate_back_quat"])
         elif phase == 3:
             return MoveSkill(self.env, self.meta["approach_wpt2"])

@@ -13,6 +13,15 @@ import numpy as np
 import py_trees
 import pytest
 
+import gymnasium as gym
+import py_trees
+import numpy as np
+from panda_mujoco_gym.behavior_tree.nodes.pick import PickNode
+from panda_mujoco_gym.behavior_tree.nodes.place import PlaceNode
+from scipy.spatial.transform import Rotation as R
+import time
+
+
 # -----------------------------------------------------------------------------
 # Dummy 环境 —— 满足各 Skill / Node 需要的最小接口
 # -----------------------------------------------------------------------------
@@ -130,3 +139,87 @@ def test_pnp_tree_runs_to_success():
     home_node = tree.root.children[-1]
     assert hasattr(home_node, "_home_skill")
     assert home_node._home_skill.i > 1
+
+
+def build_pick_task(env):
+    name = getattr(env.unwrapped, "task_sequence", ["sphere"])[0]
+    utils = env.unwrapped._utils  # type: ignore[attr-defined]
+    obj_pos = utils.get_site_xpos(env.unwrapped.model, env.unwrapped.data, f"{name}_site").copy()
+    return {
+        "meta": {
+            "id": hash(name) % 10000,
+            "delta_q": R.from_euler("y", -90, degrees=True).as_quat().tolist(),
+            "approach_wpt1": obj_pos + np.array([-0.20, 0.0, 0.05]),
+            "obj_pos": obj_pos,
+            "approach_wpt2": obj_pos + np.array([0.0, 0.0, 0.06]),
+        }
+    }
+
+def build_pick_place_task(env):
+    name = getattr(env.unwrapped, "task_sequence", ["sphere"])[0]
+    utils = env.unwrapped._utils  # type: ignore[attr-defined]
+    obj_pos = utils.get_site_xpos(env.unwrapped.model, env.unwrapped.data, f"{name}_site").copy()
+    target_pos = np.array([1.0, 0.0, 0.3])
+    return {
+        "pick_meta": {
+            "id": hash(name) % 10000,
+            "delta_q": R.from_euler("y", -90, degrees=True).as_quat().tolist(),
+            "approach_wpt1": obj_pos + np.array([-0.20, 0.0, 0.05]),
+            "obj_pos": obj_pos,
+            "approach_wpt2": obj_pos + np.array([0.0, 0.0, 0.06]),
+        },
+        "place_meta": {
+            "approach_wpt1": obj_pos + np.array([-0.20, 0.0, 0.05]),
+            "home_wpt": np.array([1.23843967, 0.0, 0.49740014]),
+            "rotate_back_quat": R.from_euler("y", 90, degrees=True).as_quat().tolist(),
+            "approach_wpt2": target_pos + np.array([0.0, 0.0, 0.06]),
+        }
+    }
+
+
+def test_pick_node_runs_to_success():
+    """PickNode 节点应在有限 tick 内返回 SUCCESS。"""
+    env = gym.make("FrankaShelfPNPDense-v0")
+    env.reset()
+    # 夹爪初始张开
+    open_act = np.zeros(env.action_space.shape, dtype=np.float32)
+    open_act[-1] = 1.0
+    for _ in range(10):
+        env.step(open_act)
+    task = build_pick_task(env)
+    pick = PickNode(env, task["meta"], name="PickDebug")
+    tree = py_trees.trees.BehaviourTree(pick)
+    for t in range(1200):
+        tree.tick()
+        for _ in range(5):
+            env.unwrapped._mujoco.mj_step(env.unwrapped.model, env.unwrapped.data, nstep=1)
+        if pick.status == py_trees.common.Status.SUCCESS:
+            break
+    assert pick.status == py_trees.common.Status.SUCCESS
+    env.close()
+    time.sleep(0.3)
+
+
+def test_pick_and_place_node_runs_to_success():
+    """Pick+Place 节点组合应在有限 tick 内返回 SUCCESS。"""
+    env = gym.make("FrankaShelfPNPDense-v0")
+    env.reset()
+    open_act = np.zeros(env.action_space.shape, dtype=np.float32)
+    open_act[-1] = 1.0
+    for _ in range(10):
+        env.step(open_act)
+    task = build_pick_place_task(env)
+    pick_node = PickNode(env, task["pick_meta"], name="Pick")
+    place_node = PlaceNode(env, task["place_meta"], name="Place")
+    root = py_trees.composites.Sequence(name="Pick-Then-Place", memory=True)
+    root.add_children([pick_node, place_node])
+    tree = py_trees.trees.BehaviourTree(root)
+    for t in range(2000):
+        tree.tick()
+        for _ in range(5):
+            env.unwrapped._mujoco.mj_step(env.unwrapped.model, env.unwrapped.data, nstep=1)
+        if root.status == py_trees.common.Status.SUCCESS:
+            break
+    assert root.status == py_trees.common.Status.SUCCESS
+    env.close()
+    time.sleep(0.3)

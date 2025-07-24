@@ -12,7 +12,7 @@ class RotateSkill(Skill):
         self,
         env,
         delta_quat: np.ndarray,
-        steps: int = 30,
+        steps: int = 50,
         err_thresh: float = 0.01,
     ):
         super().__init__(env)

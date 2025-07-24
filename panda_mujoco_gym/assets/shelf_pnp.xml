@@ -53,27 +53,27 @@
       </body>
 
       <!-- three target sites -->
-      <site name="target_sphere" pos="1.0 -0.1 0.3" size="0.02 0.02 0.02" rgba="1 0 0 1" type="sphere"/>
-      <site name="target_cube" pos="1.0 0 0.3" size="0.02 0.02 0.02" rgba="0 0 1 1" type="sphere"/>
-      <site name="target_cylinder" pos="1.0 0.1 0.3" size="0.02 0.02 0.02" rgba="0 1 0 1" type="sphere"/>
+      <site name="target_cube1" pos="1.0 -0.1 0.3" size="0.02 0.02 0.02" rgba="1 0 0 1" type="sphere"/>
+      <site name="target_cube2" pos="1.0 0 0.3" size="0.02 0.02 0.02" rgba="0 0 1 1" type="sphere"/>
+      <site name="target_cube3" pos="1.0 0.1 0.3" size="0.02 0.02 0.02" rgba="0 1 0 1" type="sphere"/>
 
-      <!-- sphere on the middle shelf, middle side -->
-      <body name="sphere" pos="1.4 0.0 0.73">
-        <joint type="free" name="sphere_joint"/>
-        <geom name="sphere_geom" type="sphere" size="0.02" rgba="0.8 0.2 0.2 1"/>
-        <site name="sphere_site" pos="0 0 0" size="0.01" type="sphere"/>
+      <!-- cube1 on the middle shelf, middle side -->
+      <body name="cube1" pos="1.4 0.0 0.73">
+        <joint type="free" name="cube1_joint"/>
+        <geom name="cube1_geom" type="box" size="0.02 0.02 0.02" rgba="0.8 0.2 0.2 1"/>
+        <site name="cube1_site" pos="0 0 0" size="0.01" type="box"/>
       </body>
-      <!-- cube on the top shelf, middle side -->
-      <body name="cube" pos="1.4 0.0 1.03">
-        <joint type="free" name="cube_joint"/>
-        <geom name="cube_geom" type="box" size="0.02 0.02 0.02" rgba="0.2 0.6 0.8 1"/>
-        <site name="cube_site" pos="0 0 0" size="0.01" type="sphere"/>
+      <!-- cube2 on the top shelf, middle side -->
+      <body name="cube2" pos="1.4 0.0 1.03">
+        <joint type="free" name="cube2_joint"/>
+        <geom name="cube2_geom" type="box" size="0.02 0.02 0.02" rgba="0.2 0.6 0.8 1"/>
+        <site name="cube2_site" pos="0 0 0" size="0.01" type="box"/>
       </body>
-      <!-- cylinder on the bottom shelf, middle side -->
-      <body name="cylinder" pos="1.4 0.0 0.43">
-        <joint type="free" name="cylinder_joint"/>
-        <geom name="cylinder_geom" type="cylinder" size="0.02 0.02" rgba="0.2 0.8 0.2 1"/>
-        <site name="cylinder_site" pos="0 0 0.02" size="0.01" type="sphere"/>
+      <!-- cube3 on the bottom shelf, middle side -->
+      <body name="cube3" pos="1.4 0.0 0.43">
+        <joint type="free" name="cube3_joint"/>
+        <geom name="cube3_geom" type="box" size="0.02 0.02 0.02" rgba="0.2 0.8 0.2 1"/>
+        <site name="cube3_site" pos="0 0 0" size="0.01" type="box"/>
       </body>
 
       <!-- dummy object for compatibility -->

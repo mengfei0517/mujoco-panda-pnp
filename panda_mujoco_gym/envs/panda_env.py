@@ -34,6 +34,7 @@ class FrankaEnv(MujocoRobotEnv):
         **kwargs,
     ):
         # multi-object version variables initialization
+        # 只在这里设置一次
         self.task_sequence = ["sphere", "cylinder"]
         # self.task_sequence = ["sphere"]
         self.current_task_index = 0
@@ -340,4 +341,10 @@ class FrankaEnv(MujocoRobotEnv):
         finger1 = self._utils.get_joint_qpos(self.model, self.data, "finger_joint1")
         finger2 = self._utils.get_joint_qpos(self.model, self.data, "finger_joint2")
         return finger1 + finger2
+
+    def reset(self, *args, **kwargs):
+        result = super().reset(*args, **kwargs)
+        # 自动设置home_pos为当前末端位置
+        self.home_pos = self.get_ee_position().copy()
+        return result
 

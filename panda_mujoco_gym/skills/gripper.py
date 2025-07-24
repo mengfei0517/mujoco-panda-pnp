@@ -30,7 +30,7 @@ class GripperSkill(Skill):
 
         assert mode in ("close", "open"), "mode must be 'close' or 'open'"
         self.mode      = mode
-        self.duration  = duration if duration is not None else (40 if mode == "close" else 30)
+        self.duration  = duration if duration is not None else (10 if mode == "close" else 15)
         self.thresh    = thresh   if thresh   is not None else (0.02 if mode == "close" else 0.08)
         self.i         = 0        # step counter
         self.done      = False
