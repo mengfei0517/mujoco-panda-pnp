@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List, Dict, Any
 
 import py_trees
-from panda_mujoco_gym.skills.move import MoveIKSkill, MoveSkill
+from panda_mujoco_gym.skills.move import MoveSkill
 from panda_mujoco_gym.skills.rotate import RotateSkill
 from panda_mujoco_gym.skills.gripper import GripperSkill
 
@@ -46,14 +46,13 @@ class PickNode(py_trees.behaviour.Behaviour):
             self.phase += 1
 
             if self.phase == 1:
-                self.skills.append(MoveIKSkill(self.env, self.meta["approach_wpt1"]))
-                # print(f"[Debug] approach_wpt1: {self.meta['approach_wpt1']}")
+                self.skills.append(MoveSkill(self.env, self.meta["approach_wpt1"]))
             elif self.phase == 2:
-                self.skills.append(MoveIKSkill(self.env, self.meta["obj_pos"]))
+                self.skills.append(MoveSkill(self.env, self.meta["obj_pos"]))
             elif self.phase == 3:
                 self.skills.append(GripperSkill.close(self.env))
             elif self.phase == 4:
-                self.skills.append(MoveIKSkill(self.env, self.meta["approach_wpt2"]))
+                self.skills.append(MoveSkill(self.env, self.meta["approach_wpt2"]))
 
             if self.phase >= len(self.skills):
                 # if self.env.is_holding_object(self.meta.get("id", None)):

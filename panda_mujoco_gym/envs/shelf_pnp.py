@@ -16,7 +16,7 @@ class FrankaShelfPNPEnv(FrankaEnv):
             reward_type=reward_type,
             block_gripper=False,
             distance_threshold=0.05,
-            obj_x_range=0.05,
+            obj_x_range=0.02,
             obj_y_range=0.2,
             **kwargs,
         )

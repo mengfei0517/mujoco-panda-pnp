@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Dict, Any, List
 
 import py_trees
-from panda_mujoco_gym.skills.move import MoveSkill
+from panda_mujoco_gym.skills.move import MoveSkill, MoveIKSkill
 from panda_mujoco_gym.skills.rotate import RotateSkill
 from panda_mujoco_gym.skills.gripper import GripperSkill
 
@@ -55,13 +55,13 @@ class PlaceNode(py_trees.behaviour.Behaviour):
 
     def _build_skill(self, phase: int) -> py_trees.behaviour.Behaviour:
         if phase == 0:
-            return MoveSkill(self.env, self.meta["approach_wpt1"])
+            return MoveIKSkill(self.env, self.meta["approach_wpt1"])
         elif phase == 1:
-            return MoveSkill(self.env, self.meta["home_wpt"])
+            return MoveIKSkill(self.env, self.meta["home_wpt"])
         elif phase == 2:
             return RotateSkill(self.env, self.meta["rotate_back_quat"])
         elif phase == 3:
-            return MoveSkill(self.env, self.meta["approach_wpt2"])
+            return MoveIKSkill(self.env, self.meta["approach_wpt2"])
         elif phase == 4:
             return GripperSkill.open(self.env)
         else:

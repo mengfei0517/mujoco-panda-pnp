@@ -7,3 +7,4 @@ torch==2.5.1
 tensorboard==2.19.0
 py_trees==2.2.2
 graphviz==0.20.1
+pinocchio

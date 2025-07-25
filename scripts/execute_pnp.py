@@ -20,15 +20,16 @@ def build_pick_place_tasks(env):
         utils = env.unwrapped._utils  # type: ignore[attr-defined]
         obj_pos = utils.get_site_xpos(env.unwrapped.model, env.unwrapped.data, f"{name}_site").copy()
         target_pos = utils.get_site_xpos(env.unwrapped.model, env.unwrapped.data, f"target_{name}").copy()
+        obj_y = obj_pos[1]
         pick_meta = {
             "id": hash(name) % 10000,
             "delta_q": R.from_euler("y", -90, degrees=True).as_quat().tolist(),
-            "approach_wpt1": obj_pos + np.array([-0.20, 0.0, 0.05]),
-            "obj_pos": obj_pos,
+            "approach_wpt1": obj_pos + np.array([-0.2, -obj_y, 0.05]),
+            "obj_pos": obj_pos + np.array([0.015, 0.0, 0.0]),
             "approach_wpt2": obj_pos + np.array([0.0, 0.0, 0.06]),
         }
         place_meta = {
-            "approach_wpt1": obj_pos + np.array([-0.20, 0.0, 0.05]),
+            "approach_wpt1": obj_pos + np.array([-0.20, -obj_y, 0.05]),
             "home_wpt": np.array([1.23843967, 0.0, 0.49740014]),
             "rotate_back_quat": R.from_euler("y", 90, degrees=True).as_quat().tolist(),
             "approach_wpt2": target_pos + np.array([0.0, 0.0, 0.06]),
@@ -66,15 +67,15 @@ def main():
     # 后续直接用 env.unwrapped.task_sequence
     # 打开渲染窗口，持续刷新10秒，等待用户调整视角
     if args.render:
-        print("请调整好视频视角，10秒后自动开始任务...")
+        print("请调整好视频视角，1秒后自动开始任务...")
         t0 = time.time()
-        while time.time() - t0 < 10:
+        while time.time() - t0 < 1:
             env.render()
             time.sleep(0.03)  # 约30fps，窗口流畅
 
     open_act = np.zeros(env.action_space.shape, dtype=np.float32)
     open_act[-1] = 1.0
-    for _ in range(10):
+    for _ in range(20):
         env.step(open_act)
 
     if args.render:

@@ -178,8 +178,10 @@ class PandaPickPlace:
             self.robot.model, self.robot.data, object_site
         ).copy()
 
-        mid_offset = np.array([-0.20, 0.0, 0.05])
-        grasp_offset = np.array([0.24, 0.0, -0.06])
+        obj_y = obj_pos[1]
+
+        mid_offset = np.array([-0.20, -obj_y, 0.05])
+        grasp_offset = np.array([0.24, -obj_y, -0.06])
 
         mid_pos = obj_pos + mid_offset
         grasp_pos = mid_pos + grasp_offset

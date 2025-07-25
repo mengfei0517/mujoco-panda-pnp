@@ -4,6 +4,7 @@ from gymnasium.core import ObsType
 from gymnasium_robotics.envs.robot_env import MujocoRobotEnv
 from gymnasium_robotics.utils import rotations
 from typing import Optional, Any, SupportsFloat
+from panda_mujoco_gym.skills.ik_solver import JacobianIKController
 
 DEFAULT_CAMERA_CONFIG = {
     "distance": 2.5,
@@ -35,7 +36,7 @@ class FrankaEnv(MujocoRobotEnv):
     ):
         # multi-object version variables initialization
         # 只在这里设置一次
-        self.task_sequence = ["sphere", "cylinder"]
+        self.task_sequence = ["cube1", "cube2", "cube3"]
         # self.task_sequence = ["sphere"]
         self.current_task_index = 0
         self.current_target_object = self.task_sequence[0]
@@ -316,10 +317,18 @@ class FrankaEnv(MujocoRobotEnv):
         ).copy()
 
     def _sample_object(self):
-        # not sample object, just return the current object position
-        return self._utils.get_site_xpos(
-            self.model, self.data, f"{self.current_target_object}_site"
-        ).copy()
+        # 对所有物体采样
+        for obj in self.task_sequence:
+            current_site = f"{obj}_site"
+            center_pos = self._utils.get_site_xpos(self.model, self.data, current_site).copy()
+            x = center_pos[0] + np.random.uniform(-self.obj_x_range, self.obj_x_range)
+            y = center_pos[1] + np.random.uniform(-self.obj_y_range, self.obj_y_range)
+            z = center_pos[2]
+            new_pos = np.array([x, y, z])
+            joint_name = f"{obj}_joint"
+            # 注意joint的长度，通常是7（3位移+4四元数）
+            self._utils.set_joint_qpos(self.model, self.data, joint_name, np.array([x, y, z, 1, 0, 0, 0]))
+        self._mujoco.mj_forward(self.model, self.data)
 
     def get_ee_orientation(self) -> np.ndarray:
         site_mat = self._utils.get_site_xmat(self.model, self.data, "ee_center_site").reshape(9, 1)
@@ -348,3 +357,30 @@ class FrankaEnv(MujocoRobotEnv):
         self.home_pos = self.get_ee_position().copy()
         return result
 
+    # --- 放到类 FrankaEnv (或 PandaEnv) 里 -------------------------
+
+    def set_joint_angles(self, q: np.ndarray) -> None:
+        """直接写入关节角并做一次 mj_forward(). 仅仿真使用。"""
+        # self.data.qpos[:7] = q
+        # mujoco.mj_forward(self.model, self.data)
+        assert q.shape == (7,)
+        self.data.qpos[:7] = q
+        mujoco.mj_forward(self.model, self.data)
+
+    def solve_ik(self, target_pos, target_quat, q_init=None):
+        """薄包装调用全局 solve_ik."""
+        from panda_mujoco_gym.skills.ik_solver import solve_ik as _ik
+        return _ik(
+            model=self.model,
+            data=self.data,
+            site_name="ee_center_site",   # ← 若 XML 名称不同请改
+            target_pos=target_pos,
+            target_quat=target_quat,
+            q_init=q_init if q_init is not None else self.data.qpos[:7].copy(),
+        )
+    @property
+    def utils(self):
+        return self._utils
+
+    # def forward(self):
+    #     mujoco.mj_forward(self.model, self.data)
