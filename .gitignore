@@ -6,4 +6,4 @@ trained_model/
 test_model/
 figs/
 logs/
-new_logs/
+new_logs/scripts/checkpoints/*.pkl
