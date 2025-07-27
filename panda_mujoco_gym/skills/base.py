@@ -1,3 +1,7 @@
+"""
+Abstract base class for all skills.
+"""
+
 from __future__ import annotations
 
 import numpy as np
@@ -37,7 +41,8 @@ class Skill(abc.ABC):
         mujoco = self.env.unwrapped
         for _ in range(n):
             mujoco._mujoco.mj_step(mujoco.model, mujoco.data, nstep=1)
-        if hasattr(self.env, "render"):
+        # Only render if render_mode is set
+        if hasattr(self.env, "render") and self.env.render_mode is not None:
             self.env.render()
 
 
@@ -67,11 +72,6 @@ class Skill(abc.ABC):
         """Whether gripper is (almost) fully open."""
         return width > thresh
 
-
-    @staticmethod
-    def lifted_enough(z_now: float, z_init: float, dz: float, thresh: float = 0.005) -> bool:
-        """Whether object is lifted by at least dz from initial z."""
-        return z_now > z_init + dz - thresh
 
 
     @staticmethod

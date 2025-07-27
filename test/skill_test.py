@@ -1,8 +1,12 @@
-# test/skill_test.py
+"""
+Test skills.
+"""
+
 import sys
 import gymnasium as gym
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+import panda_mujoco_gym  # noqa: register env
 from panda_mujoco_gym.skills.rotate import RotateSkill
 from panda_mujoco_gym.skills.move import MoveSkill
 from panda_mujoco_gym.skills.gripper import GripperSkill
@@ -77,7 +81,7 @@ def test_gripper_close():
 
 def test_gripper_open():
     env = make_env()
-    # 先闭合一下，确保随后 open 有意义
+    # First close to ensure open has meaning
     env.step(np.concatenate([np.zeros(6), [-1.0]]))
     skill = GripperSkill.open(env, duration=30, thresh=0.08)
     run_skill(skill, env, max_steps=100)

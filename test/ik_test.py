@@ -1,6 +1,12 @@
+"""
+Test IK solver.
+"""
+
 import numpy as np
 import gymnasium as gym
+import panda_mujoco_gym  # noqa: register env
 from panda_mujoco_gym.skills.ik_solver import JacobianIKController
+import mujoco
 
 def test_solve_ik_direct():
     env = gym.make("FrankaShelfPNPDense-v0", render_mode="human")
@@ -33,7 +39,7 @@ def test_solve_ik_direct():
 
     # 执行并 forward，获取末端位置
     env.unwrapped.set_joint_angles(q_sol)
-    env.forward()
+    mujoco.mj_forward(env.unwrapped.model, env.unwrapped.data)
 
     final_pos = env.unwrapped.get_ee_position()
     print("Target pos:", target_pos)

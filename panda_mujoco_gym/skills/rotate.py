@@ -1,3 +1,7 @@
+"""
+RotateSkill – Rotate end-effector in place by `delta_quat` over `steps` ticks.
+"""
+
 from __future__ import annotations
 import numpy as np
 from scipy.spatial.transform import Rotation as R, Slerp

@@ -1,3 +1,7 @@
+"""
+MoveSkill – Move end-effector to target position in a straight line (fixed orientation).
+"""
+
 from __future__ import annotations
 
 import numpy as np

@@ -1,3 +1,14 @@
+"""
+GripperSkill – Unified gripper primitive that covers both 'close' and 'open'.
+
+End condition is consistent with the old version:
+    done = (step ≥ duration) AND (width satisfies fingers_(closed/open)).
+
+If the environment lacks `get_gripper_width()`:
+    • close → width defaults to 0.0 ⇒ fingers_closed() always True
+    • open  → width defaults to np.inf ⇒ fingers_open() always True
+"""
+
 from __future__ import annotations
 
 import numpy as np
@@ -7,16 +18,6 @@ from .base import Skill
 
 
 class GripperSkill(Skill):
-    """
-    Unified gripper primitive that covers both 'close' and 'open'.
-
-    结束条件与旧版保持一致：
-        done = (step ≥ duration) AND (宽度满足 fingers_(closed/open)).
-
-    若环境缺少 `get_gripper_width()`：
-        • close → width 默认为 0.0 ⇒ fingers_closed() 恒 True
-        • open  → width 默认为 np.inf ⇒ fingers_open()  恒 True
-    """
 
     def __init__(
         self,
@@ -35,7 +36,7 @@ class GripperSkill(Skill):
         self.i         = 0        # step counter
         self.done      = False
 
-    # -------- 便捷工厂 -------- #
+    # ── Convenient factory ──────────────────────────────────────────────
     @classmethod
     def close(cls, env, **kw):   # noqa: D401
         return cls(env, "close", **kw)
@@ -51,7 +52,7 @@ class GripperSkill(Skill):
 
     # --------------------------------------------------------------- #
     def _current_width(self) -> float:
-        """获取夹爪宽度；若环境无接口则返回默认值."""
+        """Get gripper width; return default value if environment lacks interface."""
         default = 0.0 if self.mode == "close" else np.inf
         get_w   = getattr(self.env, "get_gripper_width", None)
         if callable(get_w):
@@ -67,7 +68,7 @@ class GripperSkill(Skill):
         if self.done:
             return np.zeros(7, dtype=np.float32)
 
-        # 构造动作（仅控制 gripper channel）
+        # Construct action (only control gripper channel)
         action       = np.zeros(7, dtype=np.float32)
         action[-1]   = -1.0 if self.mode == "close" else 1.0
         self.env.step(action)
@@ -81,7 +82,7 @@ class GripperSkill(Skill):
         else:  # open
             cond_width = Skill.fingers_open(width, self.thresh)
 
-        # 与旧版保持一致：计时 AND 宽度
+        # ── End condition ──────────────────────────────────────────────
         if (self.i >= self.duration) and cond_width:
             self.done = True
 

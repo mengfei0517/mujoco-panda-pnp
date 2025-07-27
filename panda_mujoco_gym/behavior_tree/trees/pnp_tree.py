@@ -1,7 +1,7 @@
 """panda_mujoco_gym.behavior_tree.trees.pnp_tree
 
-Pick‑and‑Place 行为树构建器。
-组合 PickNode / PlaceNode / HomeNode，支持对每次抓取自动重试。
+Pick‑and‑Place behavior tree builder.
+Combines PickNode / PlaceNode / HomeNode, supports automatic retry for each pick.
 """
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ def build_pnp_tree(
         place = PlaceNode(env, meta=task["place_meta"], name=f"Place-{i}")
         home = HomeNode(env, name=f"Home-{i}")
 
-        # 每个物体的流程：Pick → Place → Home
+        # Process for each object: Pick → Place → Home
         sub_seq = py_trees.composites.Sequence(name=f"PnP-Task-{i}", memory=True)
         sub_seq.add_children([pick, place, home])
 

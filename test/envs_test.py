@@ -1,3 +1,7 @@
+"""
+Test environment registration.
+"""
+
 import gymnasium as gym
 import panda_mujoco_gym
 import pytest

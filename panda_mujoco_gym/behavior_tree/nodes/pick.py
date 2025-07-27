@@ -1,3 +1,11 @@
+"""
+PickNode – Control robot to pick up an object from the shelf.
+
+Uses MoveIKSkill to move to approach_wpt1, then MoveIKSkill to move to obj_pos,
+then GripperSkill.close() to grasp the object, and finally MoveIKSkill to move to approach_wpt2.
+"""
+
+
 from __future__ import annotations
 from typing import List, Dict, Any
 
@@ -56,10 +64,7 @@ class PickNode(py_trees.behaviour.Behaviour):
                 self.skills.append(MoveIKSkill(self.env, self.meta["approach_wpt2"]))
 
             if self.phase >= len(self.skills):
-                # if self.env.is_holding_object(self.meta.get("id", None)):
-                #     return py_trees.common.Status.SUCCESS
-                # else:
-                #     return py_trees.common.Status.FAILURE
+
                 return py_trees.common.Status.SUCCESS
 
             self.curr = self.skills[self.phase]

@@ -1,3 +1,7 @@
+"""
+Execute pick and place node for Franka Panda (MuJoCo).
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -8,11 +12,12 @@ import gymnasium as gym
 import numpy as np
 import py_trees
 from scipy.spatial.transform import Rotation as R
+import panda_mujoco_gym  # noqa: register env
 
 from panda_mujoco_gym.behavior_tree.nodes.pick import PickNode
 from panda_mujoco_gym.behavior_tree.nodes.place import PlaceNode
-from panda_mujoco_gym.behavior_tree.nodes.home import HomeNode  # ← 新增
-from panda_mujoco_gym.behavior_tree.trees.pnp_tree import build_pnp_tree  # 新增
+from panda_mujoco_gym.behavior_tree.nodes.home import HomeNode
+from panda_mujoco_gym.behavior_tree.trees.pnp_tree import build_pnp_tree
 
 def build_pick_place_tasks(env):
     tasks = []
@@ -50,28 +55,26 @@ def main():
         "--task-sequence",
         type=str,
         default=None,
-        help="用逗号分隔的物体名序列，如 sphere,cylinder,cube"
+        help="Object name sequence separated by commas, e.g. sphere,cylinder,cube"
     )
     args = parser.parse_args()
 
     env = gym.make(args.env, render_mode="human" if args.render else None)
     env.reset()
 
-    # 这里赋值任务序列
-    env.unwrapped.task_sequence = ["cube1", "cube2", "cube3"]  # 你想要的顺序
+    # Set task sequence
+    env.unwrapped.task_sequence = ["cube1", "cube2", "cube3"]
 
-    # 或者用命令行参数
+    # Or use command line parameter
     if args.task_sequence is not None:
         env.unwrapped.task_sequence = [name.strip() for name in args.task_sequence.split(",")]
 
-    # 后续直接用 env.unwrapped.task_sequence
-    # 打开渲染窗口，持续刷新10秒，等待用户调整视角
     if args.render:
-        print("请调整好视频视角，1秒后自动开始任务...")
+        print("Please adjust the video view, 1 second after starting the task...")
         t0 = time.time()
         while time.time() - t0 < 1:
             env.render()
-            time.sleep(0.03)  # 约30fps，窗口流畅
+            time.sleep(0.03)  # About 30fps, window smooth
 
     open_act = np.zeros(env.action_space.shape, dtype=np.float32)
     open_act[-1] = 1.0
@@ -82,7 +85,7 @@ def main():
         env.render()
 
     tasks = build_pick_place_tasks(env)
-    # 适配pnp_tree的接口
+    # Adapt to pnp_tree interface
     tasks_for_tree = [
         {"obj_meta": t["pick_meta"], "place_meta": t["place_meta"]} for t in tasks
     ]

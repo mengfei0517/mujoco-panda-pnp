@@ -1,3 +1,7 @@
+"""
+Franka / Panda pick-and-place environment (supports multi-object, three-tier shelf)
+"""
+
 import os
 from panda_mujoco_gym.envs.panda_env import FrankaEnv
 

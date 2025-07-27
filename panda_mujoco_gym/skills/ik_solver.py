@@ -1,3 +1,9 @@
+"""
+JacobianIKController – Unified IK solver for end-effector position.
+
+Uses Jacobian-based IK with damping to solve for joint angles.
+"""
+
 from __future__ import annotations
 
 import numpy as np
