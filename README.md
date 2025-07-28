@@ -69,7 +69,7 @@ We explore **two complementary approaches** to multi‑object pick‑and‑place
 
 ```bash
 # 1. Clone repository
-git clone <repository-url>
+git clone https://github.com/mengfei0517/mujoco-panda-pnp.git
 cd panda_mujoco_gym
 
 # 2. Create virtual environment
@@ -90,7 +90,7 @@ pytest test/ -v
 
 - **Minimum**: 8GB RAM, 4GB VRAM
 - **Recommended**: 16GB RAM, 8GB+ VRAM for RL training
-- **OS**: Linux (Ubuntu 20.04+), macOS, Windows (WSL)
+- **OS**: Linux (Ubuntu 22.04+), macOS, Windows (WSL)
 
 ---
 
